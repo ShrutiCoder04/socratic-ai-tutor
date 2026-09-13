@@ -157,7 +157,7 @@ Contributions welcome! Please open an issue or submit a pull request.
 
 ## 📧 Contact
 
-For questions or feedback, reach out to [your-email@example.com](mailto:your-email@example.com) or open a GitHub discussion.
+For questions or feedback, reach out to me and mailto: sktamd@gmail.com or open a GitHub discussion.
 
 ---
 
