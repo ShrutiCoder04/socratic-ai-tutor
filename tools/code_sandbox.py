@@ -1,37 +1,52 @@
-import sys
-import io
-import contextlib
-from typing import Tuple
+"""Safe code execution sandbox for verification.
 
-def execute_code_safely(code_str: str, timeout_seconds: int = 3) -> Tuple[bool, str]:
+Executes student code in an isolated environment.
+"""
+
+from typing import Tuple
+import subprocess
+import tempfile
+import os
+
+def verify_code_step(step_content: str, expected_output: str) -> Tuple[bool, str]:
     """
-    Executes student code within an isolated buffer environment and captures standard output/errors.
-    """
-    stdout_buffer = io.StringIO()
-    stderr_buffer = io.StringIO()
+    Executes code in a sandboxed environment and verifies output.
     
-    # Simple safe environment globals
-    safe_globals = {
-        "__builtins__": {
-            "range": range,
-            "len": len,
-            "print": print,
-            "int": int,
-            "float": float,
-            "str": str,
-            "list": list,
-            "dict": dict,
-            "set": set,
-            "min": min,
-            "max": max,
-            "sum": sum,
-            "abs": abs,
-        }
-    }
+    Args:
+        step_content: The student's code snippet
+        expected_output: Expected output or behavior
+    
+    Returns:
+        (is_correct, diagnostic_message)
+    """
     
     try:
-        with contextlib.redirect_stdout(stdout_buffer), contextlib.redirect_stderr(stderr_buffer):
-            exec(code_str, safe_globals)
-        return True, stdout_buffer.getvalue().strip()
+        # Create temporary file for code execution
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+            f.write(step_content)
+            temp_file = f.name
+        
+        # Execute with timeout
+        result = subprocess.run(
+            ['python', temp_file],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        
+        # Clean up
+        os.unlink(temp_file)
+        
+        # Compare output
+        actual_output = result.stdout.strip()
+        expected_output = expected_output.strip()
+        
+        if actual_output == expected_output:
+            return True, "Code executed correctly."
+        else:
+            return False, f"Expected output: {expected_output}\nGot: {actual_output}"
+    
+    except subprocess.TimeoutExpired:
+        return False, "Code execution timed out (infinite loop detected)."
     except Exception as e:
-        return False, f"Runtime Error: {type(e).__name__} - {str(e)}"
+        return False, f"Execution error: {str(e)}"

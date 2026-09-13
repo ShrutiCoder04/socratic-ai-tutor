@@ -1,18 +1,22 @@
+from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
 
-class StepVerification(BaseModel):
+@dataclass
+class StepVerification:
+    """Represents the verification result for a single step."""
     step_number: int
     raw_content: str
     is_correct: bool
     diagnostic_details: str
 
-class TutorState(BaseModel):
+@dataclass
+class TutorState:
+    """Maintains the session state for the tutoring loop."""
     submission_type: str = "math"  # "math" or "code"
-    raw_submission: str = ""
-    parsed_steps: List[str] = Field(default_factory=list)
-    verifications: List[StepVerification] = Field(default_factory=list)
+    parsed_steps: List[str] = field(default_factory=list)
+    step_expectations: List[str] = field(default_factory=list)
+    verifications: List[StepVerification] = field(default_factory=list)
     active_error_step: Optional[int] = None
-    hint_tier: int = 1  # Tier 1 (Location) -> Tier 2 (Socratic) -> Tier 3 (Sub-problem) -> Tier 4 (Escalate)
-    conversation_history: List[Dict[str, str]] = Field(default_factory=list)
+    hint_tier: int = 1  # 1-4 scaffolding levels
     resolved: bool = False
+    conversation_history: List[Dict[str, str]] = field(default_factory=list)
